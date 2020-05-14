@@ -67,7 +67,7 @@ public final class Parser {
     }
 
     public static void usage() {
-        System.err.println("usage: java -jar cryptography-basics.jar [-b] -e|-d -c CIPHER -s FILE [-r FILE] -k KEY\n");
+        System.err.println("usage: java -jar crypto-symmetric.jar [-b] -e|-d -c CIPHER -s FILE [-r FILE] -k KEY\n");
         System.err.println(arguments);
     }
 

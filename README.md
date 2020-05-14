@@ -6,13 +6,13 @@ Kotlin program based on cryptography algorithms for encryption and decryption in
 - [GRADLE](https://docs.gradle.org/current/userguide/installation.html#installing_with_a_package_manager)
 
 ## Build project
-    ➜  stego-image-hiding: gradle build
+    ➜  crypto-symmetric: gradle build
     ➜  ...
-    ➜  stego-image-hiding: gradle jar
+    ➜  crypto-symmetric: gradle jar
 
 ## Usage 
 
-    usage: java -jar cryptography-basics.jar [-b] -e|-d -c CIPHER -s FILE [-r FILE] -k KEY
+    usage: java -jar crypto-symmetric.jar [-b] -e|-d -c CIPHER -s FILE [-r FILE] -k KEY
 
 ```
 optional arguments:
