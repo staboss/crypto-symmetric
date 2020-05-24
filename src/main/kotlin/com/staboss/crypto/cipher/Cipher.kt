@@ -9,3 +9,7 @@ abstract class Cipher(key: String) {
 
     abstract fun decrypt(cipherText: String, isBinaryFormat: Boolean = false): String
 }
+
+enum class CipherType(val blockLength: Int) {
+    AES(16), DES(8)
+}

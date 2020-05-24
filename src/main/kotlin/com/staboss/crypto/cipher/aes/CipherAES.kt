@@ -41,8 +41,11 @@ class CipherAES(key: String) : Cipher(key) {
         encryptBlock(block, roundKeys)
         return buildString {
             matrixColumnLoop(blockColumns, 4) { i, j ->
-                if (isBinaryFormat) append(block[i][j].toBinary())
-                else append(String.format("%02X", block[i][j]))
+                if (isBinaryFormat) {
+                    append(block[i][j].toBinary())
+                } else {
+                    append(String.format("%02X", block[i][j]))
+                }
             }
         }
     }
@@ -59,8 +62,11 @@ class CipherAES(key: String) : Cipher(key) {
         decryptBlock(block, roundKeys)
         return buildString {
             matrixColumnLoop(blockColumns, 4) { i, j ->
-                if (isBinaryFormat) append(block[i][j].toBinary())
-                else append(block[i][j].toChar())
+                if (isBinaryFormat) {
+                    append(block[i][j].toBinary())
+                } else {
+                    append(block[i][j].toChar())
+                }
             }
         }
     }
@@ -125,9 +131,9 @@ class CipherAES(key: String) : Cipher(key) {
      * @param roundKey раундовый ключ, который представлен как прямоугольный массив байтов
      */
     private fun addRoundKey(state: Array<IntArray>, roundKey: Array<IntArray>) =
-            matrixRowLoop(4, blockColumns) { i, j ->
-                state[i][j] = state[i][j] xor roundKey[i][j]
-            }
+        matrixRowLoop(4, blockColumns) { i, j ->
+            state[i][j] = state[i][j] xor roundKey[i][j]
+        }
 
     /**
      * В процедуре [subBytes] каждый байт в [state] заменяется соответствующим элементом
@@ -137,9 +143,9 @@ class CipherAES(key: String) : Cipher(key) {
      * @param sBox нелинейная таблица замен
      */
     private fun subBytes(state: Array<IntArray>, sBox: IntArray) =
-            matrixRowLoop(4, blockColumns) { i, j ->
-                state[i][j] = sBox[state[i][j]]
-            }
+        matrixRowLoop(4, blockColumns) { i, j ->
+            state[i][j] = sBox[state[i][j]]
+        }
 
     /**
      * В процедуре [shiftRows] байты в каждой строке [state] циклически сдвигаются влево,

@@ -10,12 +10,16 @@ class CipherDES(key: String) : Cipher(key) {
 
     private val roundKeys by lazy {
         val keys = Array(16) { IntArray(48) }
-        for (round in 0 until 16) keys[round] = generateRoundKey(round)
+        for (round in 0 until 16) {
+            keys[round] = generateRoundKey(round)
+        }
         keys
     }
 
     init {
-        if (keyBits.size != 64) keyLengthError("DES", "128", "${keyBits.size}")
+        if (keyBits.size != 64) {
+            keyLengthError("DES", "128", "${keyBits.size}")
+        }
     }
 
     override fun encrypt(plainText: String, isBinaryFormat: Boolean): String {
@@ -45,26 +49,28 @@ class CipherDES(key: String) : Cipher(key) {
         val newBits = inputBits.indices.map { inputBits[IP[it] - 1] }.toIntArray()
 
         // Массивы l и r создаются для хранения левой и правой половинок сообщения
-        var l = IntArray(32)
-        var r = IntArray(32)
+        var lBlock = IntArray(32)
+        var rBlock = IntArray(32)
 
         (0 until 28).forEach { i -> c[i] = keyBits[PC1[i] - 1] }
         (0 until 28).forEach { j -> d[j] = keyBits[PC1[j + 28] - 1] }
 
-        System.arraycopy(newBits, 0, l, 0, 32)
-        System.arraycopy(newBits, 32, r, 0, 32)
+        System.arraycopy(newBits, 0, lBlock, 0, 32)
+        System.arraycopy(newBits, 32, rBlock, 0, 32)
 
+        var roundKey: IntArray
         for (n in 0 until 16) {
-            val newR = fiestelFunc(r, if (isDecrypt) roundKeys[15 - n] else roundKeys[n])
-            val newL = l xor newR
-            l = r
-            r = newL
+            roundKey = if (isDecrypt) roundKeys[15 - n] else roundKeys[n]
+            val newR = fiestelFunc(rBlock, roundKey)
+            val newL = lBlock xor newR
+            lBlock = rBlock
+            rBlock = newL
         }
 
         // Меняем местами левую и правую стороны
         val result = IntArray(64)
-        System.arraycopy(r, 0, result, 0, 32)
-        System.arraycopy(l, 0, result, 32, 32)
+        System.arraycopy(rBlock, 0, result, 0, 32)
+        System.arraycopy(lBlock, 0, result, 32, 32)
 
         // Применяем таблицу окончательной перестановки FP к полученному результату
         return (0 until 64).map { result[FP[it] - 1] }.toIntArray()
@@ -118,7 +124,9 @@ class CipherDES(key: String) : Cipher(key) {
             while (s.length < 4) s = "0$s"
 
             // Биты добавляются к результирующему значению
-            for (j in 0 until 4) result[i * 4 + j] = s[j].toString().toInt()
+            for (j in 0 until 4) {
+                result[i * 4 + j] = s[j].toString().toInt()
+            }
         }
 
         // Применение таблицы перестановок к полученному значению

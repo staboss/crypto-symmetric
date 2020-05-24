@@ -1,8 +1,9 @@
 package com.staboss.crypto
 
-import com.staboss.crypto.cipher.aes.CipherAES
-import com.staboss.crypto.cipher.des.CipherDES
+import com.staboss.crypto.cipher.CipherType
+import com.staboss.crypto.factory.CipherFactory
 import java.io.File
+import java.lang.System.err
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
@@ -11,37 +12,40 @@ fun main(args: Array<String>) {
         return
     }
 
+    val factory = CipherFactory
     val parser = Parser.getInstance()
+
     if (!parser.parseArgs(args)) return
 
-    val secretKey = parser.key
-    val cipher = if (parser.cipher == "DES") CipherDES(secretKey) else CipherAES(secretKey)
+    val cipherType = factory.getCipherType(parser.cipher) ?: error("Invalid cipher type")
+    val cipherMode = factory.create(cipherType, parser.key)
+
+    val alphaHex by lazy {
+        if (cipherType == CipherType.AES) 2 else 1
+    }
 
     val result: String
 
     if (parser.encrypt) {
         var plainText = parser.message
-        result = if (parser.cipher == "DES") {
-            while (plainText.length % 8 != 0) plainText += ' '
-            plainText.chunked(8).joinToString("") { cipher.encrypt(it, parser.binary) }
-        } else {
-            while (plainText.length % 16 != 0) plainText += ' '
-            plainText.chunked(16).joinToString("") { cipher.encrypt(it, parser.binary) }
+
+        while (plainText.length % cipherType.blockLength != 0) {
+            plainText += ' '
+        }
+
+        result = plainText.chunked(cipherType.blockLength).joinToString("") {
+            cipherMode.encrypt(it, parser.binary)
         }
     } else {
         val cipherText = parser.message
-        result = if (parser.cipher == "DES") {
-            if (cipherText.length % 8 != 0 || cipherText.length < 8) {
-                System.err.println("The cipher text length for DES must be a multiple of 8, the current length: ${cipherText.length}")
-                exitProcess(1)
-            }
-            cipherText.chunked(8).joinToString("") { cipher.decrypt(it, parser.binary) }
-        } else {
-            if (cipherText.length % 32 != 0 || cipherText.length < 32) {
-                System.err.println("The cipher text (hex format) length for AES must be a multiple of 16 bytes, the current length: ${cipherText.length / 2}")
-                exitProcess(1)
-            }
-            cipherText.chunked(32).joinToString("") { cipher.decrypt(it, parser.binary) }
+        val blockLength = cipherType.blockLength * alphaHex
+
+        if (cipherText.length % blockLength != 0 || cipherText.length < blockLength) {
+            textErrorMessage(cipherType, cipherText.length)
+        }
+
+        result = cipherText.chunked(blockLength).joinToString("") {
+            cipherMode.decrypt(it, parser.binary)
         }
     }
 
@@ -50,7 +54,15 @@ fun main(args: Array<String>) {
             val file = File(sourceFile)
             resultFile = file.absolutePath.substring(0, file.absolutePath.lastIndexOf('/')) + "/new_${file.name}"
         }
-        File(resultFile).writeText(result.trim())
-        println("The result was successfully saved to: \"${resultFile}\"")
+        File(resultFile).apply {
+            writeText(result.trim())
+            println("The result was successfully saved to: \"${absolutePath}\"")
+        }
     }
+}
+
+fun textErrorMessage(cipherType: CipherType, length: Int): Nothing {
+    val temp = if (cipherType == CipherType.AES) "(hex format) length for AES" else "length for DES"
+    err.println("The cipher text $temp must be a multiple of ${cipherType.blockLength}, the current length: $length")
+    exitProcess(1)
 }
